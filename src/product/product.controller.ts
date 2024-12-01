@@ -54,7 +54,6 @@ export class ProductController {
 		return this.productService.update(id, dto)
 	}
 
-	@UsePipes(new ValidationPipe())
 	@HttpCode(200)
 	@Auth()
 	@Delete(':id')
