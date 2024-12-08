@@ -20,19 +20,24 @@ export class ProductService {
 	}
 
 	private async getSearchTermFilter(searchTerm: string) {
-		return this.prisma.product.findMany ({
-			where: {OR: [
-				{
-					title: {
-						contains: searchTerm,
-						mode: 'insensitive'
-					},
-					description: {
-						contains: searchTerm,
-						mode: 'insensitive'
+		return this.prisma.product.findMany({
+			where: {
+				OR: [
+					{
+						title: {
+							contains: searchTerm,
+							mode: 'insensitive'
+						},
+						description: {
+							contains: searchTerm,
+							mode: 'insensitive'
+						}
 					}
-				}
-			]}
+				]
+			},
+			include: {
+				category: true
+			}
 		})
 	}
 
@@ -56,7 +61,11 @@ export class ProductService {
 			include: {
 				category: true,
 				color: true,
-				reviews: true
+				reviews: {
+					include: {
+						user: true
+					}
+				}
 			}
 		})
 
@@ -95,7 +104,14 @@ export class ProductService {
 			}
 		})
 
-		const productIds = mostPopularProducts.map(item => item.productId)
+		// Отфильтровываем null или undefined
+		const productIds = mostPopularProducts
+			.map(item => item.productId)
+			.filter(id => id !== null && id !== undefined)
+
+		if (productIds.length === 0) {
+			return []
+		}
 
 		const products = await this.prisma.product.findMany({
 			where: {
@@ -139,12 +155,12 @@ export class ProductService {
 	async create(storeId: string, dto: ProductDto) {
 		return this.prisma.product.create({
 			data: {
-        title: dto.title,
-        description: dto.description,
-        price: dto.price,
-        images: dto.images,
-        categoryId: dto.categoryId,
-        colorId: dto.colorId,
+				title: dto.title,
+				description: dto.description,
+				price: dto.price,
+				images: dto.images,
+				categoryId: dto.categoryId,
+				colorId: dto.colorId,
 				storeId
 			}
 		})
